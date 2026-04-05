@@ -1,0 +1,5 @@
+Model,Test_RMSE
+Lasso (Optuna),58.79330404001965
+Ridge (Optuna),58.814705011303865
+ElasticNet (Optuna),58.83515821289067
+OLS Baseline,58.84261479294567
