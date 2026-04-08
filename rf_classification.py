@@ -1,16 +1,3 @@
-"""
-rf_classification.py
---------------------
-Random Forest classifier for predicting the direction of next-year stock
-returns. Uses permutation importance (over AUC) to rank features, matching
-the regression script and avoiding the known bias of impurity-based
-importance under multicollinearity.
-
-I/O:
-    in : <BASE_DIR>/cleaned_dataset.csv
-    out: <BASE_DIR>/rf_classification/{rf_class_importance.png, metrics.txt}
-"""
-
 from __future__ import annotations
 import os
 from pathlib import Path
@@ -26,7 +13,6 @@ from sklearn.metrics import (accuracy_score, roc_auc_score, precision_score,
                              recall_score, f1_score, confusion_matrix)
 from sklearn.dummy import DummyClassifier
 
-# --------------------------------------------------------------------------- #
 BASE_DIR = Path(os.environ.get("COMP0050_BASE",
                                Path.home() / "Desktop" / "Machine Learning"))
 DATA_PATH = BASE_DIR / "cleaned_dataset.csv"
@@ -44,7 +30,6 @@ TRAIN_YEARS, TEST_YEAR = [2014, 2015, 2016, 2017], 2018
 TARGET_COL = "Class"
 SEED = 0
 
-# --------------------------------------------------------------------------- #
 df = pd.read_csv(DATA_PATH)
 print(f"Loaded {DATA_PATH} -> {df.shape}")
 
@@ -71,9 +56,6 @@ feature_names = X_train.columns.tolist()
 print(f"Train: {X_train.shape}, Test: {X_test.shape}")
 print(f"Train pos rate: {y_train.mean():.3f} | Test pos rate: {y_test.mean():.3f}")
 
-# --------------------------------------------------------------------------- #
-# Grid search                                                                 #
-# --------------------------------------------------------------------------- #
 tscv = TimeSeriesSplit(n_splits=3)
 param_grid = {
     "n_estimators":     [100, 300],
@@ -113,9 +95,6 @@ results = pd.DataFrame([
 ])
 print(results.to_string(index=False))
 
-# --------------------------------------------------------------------------- #
-# Permutation importance (test set, AUC-based, 10 repeats)                    #
-# --------------------------------------------------------------------------- #
 perm = permutation_importance(rf, X_test, y_test,
                               n_repeats=10, random_state=SEED,
                               scoring="roc_auc", n_jobs=-1)
@@ -129,7 +108,6 @@ ax.set(title="Random Forest Classifier — Top 20 Permutation Importances",
 fig.tight_layout()
 fig.savefig(OUT_DIR / "rf_class_importance.png"); plt.close(fig)
 
-# --------------------------------------------------------------------------- #
 with open(OUT_DIR / "metrics.txt", "w") as f:
     f.write("Random Forest Classification — results\n")
     f.write("========================================\n")

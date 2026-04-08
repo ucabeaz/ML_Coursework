@@ -1,17 +1,3 @@
-"""
-rf_regression.py
-----------------
-Random Forest regressor for continuous next-year stock return prediction.
-
-Uses permutation importance (not impurity-based) because impurity importance
-is biased toward high-cardinality/continuous features and is known to be
-unreliable under strong multicollinearity — exactly the setting here.
-
-I/O:
-    in : <BASE_DIR>/cleaned_dataset.csv
-    out: <BASE_DIR>/rf_regression/{rf_feature_importance.png, metrics.txt}
-"""
-
 from __future__ import annotations
 import os
 from pathlib import Path
@@ -25,7 +11,6 @@ from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import mean_squared_error, r2_score
 
-# --------------------------------------------------------------------------- #
 BASE_DIR = Path(os.environ.get("COMP0050_BASE",
                                Path.home() / "Desktop" / "Machine Learning"))
 DATA_PATH = BASE_DIR / "cleaned_dataset.csv"
@@ -42,7 +27,6 @@ NON_FEATURES = ["Ticker", "Sector", "Stock_Return",
 TRAIN_YEARS, TEST_YEAR = [2014, 2015, 2016, 2017], 2018
 SEED = 0
 
-# --------------------------------------------------------------------------- #
 df = pd.read_csv(DATA_PATH)
 print(f"Loaded {DATA_PATH} -> {df.shape}")
 
@@ -56,7 +40,6 @@ med = X_train_num.median()
 X_train_num = X_train_num.fillna(med)
 X_test_num  = X_test_num.fillna(med)
 
-# One-hot sector (trees handle raw dummies fine)
 sec_train = pd.get_dummies(train_df["Sector"], prefix="sec", dummy_na=True)
 sec_test  = pd.get_dummies(test_df["Sector"],  prefix="sec", dummy_na=True)
 sec_test  = sec_test.reindex(columns=sec_train.columns, fill_value=0)
@@ -69,9 +52,6 @@ feature_names = X_train.columns.tolist()
 
 print(f"Train: {X_train.shape}, Test: {X_test.shape}")
 
-# --------------------------------------------------------------------------- #
-# Grid search with expanding-window CV                                        #
-# --------------------------------------------------------------------------- #
 tscv = TimeSeriesSplit(n_splits=3)
 param_grid = {
     "n_estimators":     [100, 300],
@@ -96,9 +76,6 @@ base_r2   = r2_score(y_test, np.full_like(y_test, y_train.mean(), dtype=float))
 print(f"RF   : RMSE={test_rmse:.3f}  R2={test_r2:.4f}")
 print(f"Mean : RMSE={base_rmse:.3f}  R2={base_r2:.4f}")
 
-# --------------------------------------------------------------------------- #
-# Permutation importance (test set, 10 repeats)                               #
-# --------------------------------------------------------------------------- #
 perm = permutation_importance(rf, X_test, y_test,
                               n_repeats=10, random_state=SEED,
                               scoring="neg_root_mean_squared_error", n_jobs=-1)
@@ -112,7 +89,6 @@ ax.set(title="Random Forest Regressor — Top 15 Permutation Importances",
 fig.tight_layout()
 fig.savefig(OUT_DIR / "rf_feature_importance.png"); plt.close(fig)
 
-# --------------------------------------------------------------------------- #
 with open(OUT_DIR / "metrics.txt", "w") as f:
     f.write("Random Forest Regression — results\n")
     f.write("===================================\n")
